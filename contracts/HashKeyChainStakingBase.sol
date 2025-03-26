@@ -284,7 +284,7 @@ abstract contract HashKeyChainStakingBase is
         lastRewardBlock = block.number;
     }
     // 计算修正比例因子 r_i
-    function calculateCorrectionFactor(StakeType stakeType) public view returns (uint256) {
+    function calculateCorrectionFactor(StakeType stakeType) public view returns (uint256, uint256 ) {
         // 计算所有池的总加权质押量
         uint256 totalWeightedShares = 0;
         for (uint256 i = 0; i < 5; i++) {
@@ -293,7 +293,7 @@ abstract contract HashKeyChainStakingBase is
         }
         // 避免除以零
         if (totalWeightedShares == 0) {
-            return 1;
+            return (0, 0);
         }
         
         // 计算指定池的加权质押量
@@ -307,12 +307,12 @@ abstract contract HashKeyChainStakingBase is
         
         // 如果百分比为0，避免除以零
         if (percentOfTotalShares == 0) {
-            return (weightedShares * 10000) / totalWeightedShares;
+            return (weightedShares, totalWeightedShares);
         }
         
         // 返回修正比例因子 r_i: (weightedShares * 10000 / totalWeightedShares) / percentOfTotalShares
         // return ((weightedShares * 10000) / totalWeightedShares) * 10000 / percentOfTotalShares;
-        return (weightedShares * 10000) / totalWeightedShares;
+            return (weightedShares, totalWeightedShares);
     }
     /**
      * @dev Calculate HSK amount for specified share amount
@@ -354,20 +354,70 @@ abstract contract HashKeyChainStakingBase is
         return getHSKForSharesByType(_sharesAmount, stakeType);
     }
 
-    function getHSKForSharesByType(uint256 _sharesAmount, StakeType stakeType) public view returns (uint256) {
-        uint256 totalShares = stHSK.totalSupply();
-        if (totalShares == 0) {
-            return _sharesAmount; // Initial 1:1 exchange rate
-        }
-        uint256 totalRewards = hskPerBlock * (block.number - startBlock);
-        uint256 unClaimedRewards = totalRewards - totalPaidRewards;
-        uint256 ratio = calculateCorrectionFactor(stakeType);
-        console.log(ratio, 'ratio');
-        console.log(unClaimedRewards, 'unClaimedRewards');
+    // function getHSKForSharesByType(uint256 _sharesAmount, StakeType stakeType) public view returns (uint256) {
+    //     // uint256 totalShares = stHSK.totalSupply();
+    //     uint256 totalShares = 3830479 * 1 ^ 18;
+    //     // 3,830,479
+    //     if (totalShares == 0) {
+    //         return _sharesAmount; // Initial 1:1 exchange rate
+    //     }
+    //     console.log(_sharesAmount, '_sharesAmount');
+    //     console.log(totalSharesByStakeType1111[stakeType], 'totalSharesByStakeType1111[stakeType]');
 
-        return _sharesAmount / totalSharesByStakeType1111[stakeType] * unClaimedRewards * ratio;
+    //     uint256 totalRewards = hskPerBlock * (block.number - startBlock);
+    //     uint256 unClaimedRewards = totalRewards - totalPaidRewards;
+    //     console.log(unClaimedRewards, 'unClaimedRewards 32723');
+        
+    //     // Now handle the two return values from calculateCorrectionFactor
+    //     (uint256 weightedShares, uint256 totalWeightedShares) = calculateCorrectionFactor(stakeType);
+    //     return (_sharesAmount * totalPooledHSK + unClaimedRewards) / totalShares;
+    // }
+function getHSKForSharesByType(uint256 _sharesAmount, StakeType stakeType) public view returns (uint256) {
+    // 获取总股份
+    uint256 totalShares = stHSK.totalSupply();
+    if (totalShares == 0) {
+        return _sharesAmount; // 初始 1:1 汇率
+    }
+    
+    // 计算未分配奖励
+    uint256 totalRewards = hskPerBlock * (block.number - startBlock);
+    uint256 unClaimedRewards = totalRewards - totalPaidRewards;
+    
+    // 获取修正因子数据
+    (uint256 weightedShares, uint256 totalWeightedShares) = calculateCorrectionFactor(stakeType);
+    
+    // 计算修正因子 r_i
+    uint256 r_i;
+    if (totalWeightedShares > 0) {
+        r_i = (weightedShares * 1e18) / totalWeightedShares; // 使用 1e18 作为精度因子
+    } else {
+        r_i = 0;
+    }
+    console.log(r_i, 'r_i');
+    
+    // 计算基础 HSK
+    uint256 baseHSK = (_sharesAmount * totalPooledHSK) / totalShares;
+    console.log(baseHSK, 'baseHSK');
+    
+    // 计算奖励 HSK
+    uint256 totalSharesByType = totalSharesByStakeType1111[stakeType]; // 假设这是记录每种质押类型股份的映射
+    uint256 rewardHSK;
+    if (totalSharesByType > 0) {
+        // 该质押类型的总奖励
+        uint256 typeRewards = (unClaimedRewards * r_i) / 1e18; // 除以精度因子
+        // 用户在该类型的奖励份额
+        rewardHSK = (typeRewards * _sharesAmount) / totalSharesByType;
+    } else {
+        rewardHSK = 0;
     }
 
+    console.log(rewardHSK, 'rewardHSK');
+    
+    // 计算总 HSK
+    uint256 totalHSK = baseHSK + rewardHSK;
+    
+    return totalHSK;
+}
 
     /**
      * @dev Calculate share amount for specified HSK amount

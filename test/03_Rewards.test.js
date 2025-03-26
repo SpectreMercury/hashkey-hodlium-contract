@@ -41,7 +41,7 @@ describe("HashKeyChain Staking - Rewards", function () {
   });
 
   it("Should accumulate rewards over time", async function() {
-    const stakeAmount = ethers.parseEther("1000");
+    const stakeAmount = ethers.parseEther("9000");
     await staking.connect(addr1).stakeLocked(FIXED_30_DAYS, { value: stakeAmount });
     await staking.connect(addr2).stakeLocked(FIXED_365_DAYS, { value: ethers.parseEther("9000") });
     await staking.connect(addr3).stakeLocked(FIXED_365_DAYS, { value: ethers.parseEther("9000") });
@@ -55,8 +55,8 @@ describe("HashKeyChain Staking - Rewards", function () {
     const initialPooledHSK = await staking.totalPooledHSK();
     
     // Fast forward time and mine blocks
-    await time.increase(2 * 24 * 60 * 60); // 180 days
-    await mine(2 * 24 * 60 * 30); // Mine 100 blocks
+    await time.increase(2.5 * 24 * 60 * 60); // 180 days
+    await mine(2.5 * 24 * 60 * 30); // Mine 100 blocks
   
     // Force reward pool update
     await staking.updateRewardPool();
