@@ -18,7 +18,7 @@ describe("HashKeyChain Staking - Rewards", function () {
     // Deploy contract
     const HashKeyChainStaking = await ethers.getContractFactory("HashKeyChainStaking");
     staking = await upgrades.deployProxy(HashKeyChainStaking, [
-      ethers.parseEther("0.01"),
+      ethers.parseEther("0.38"),
       (await ethers.provider.getBlockNumber()) + 10,
       ethers.parseEther("1"),
       minStakeAmount,
@@ -41,8 +41,8 @@ describe("HashKeyChain Staking - Rewards", function () {
   });
 
   it("Should accumulate rewards over time", async function() {
-    const stakeAmount = ethers.parseEther("9000");
-    await staking.connect(addr1).stakeLocked(FIXED_365_DAYS, { value: stakeAmount });
+    const stakeAmount = ethers.parseEther("1000");
+    await staking.connect(addr1).stakeLocked(FIXED_30_DAYS, { value: stakeAmount });
     await staking.connect(addr2).stakeLocked(FIXED_365_DAYS, { value: ethers.parseEther("9000") });
     await staking.connect(addr3).stakeLocked(FIXED_365_DAYS, { value: ethers.parseEther("9000") });
     await staking.connect(addr4).stakeLocked(FIXED_365_DAYS, { value: ethers.parseEther("9000") });
@@ -55,13 +55,13 @@ describe("HashKeyChain Staking - Rewards", function () {
     const initialPooledHSK = await staking.totalPooledHSK();
     
     // Fast forward time and mine blocks
-    await time.increase(365 * 24 * 60 * 60); // 180 days
-    await mine(365 * 24 * 60 * 30); // Mine 100 blocks
+    await time.increase(2 * 24 * 60 * 60); // 180 days
+    await mine(2 * 24 * 60 * 30); // Mine 100 blocks
   
     // Force reward pool update
     await staking.updateRewardPool();
 
-    console.log('apr !!!!', await staking.getCurrentAPR(ethers.parseEther("100"), FIXED_180_DAYS));
+    console.log('apr !!!!', await staking.getCurrentAPR(ethers.parseEther("100"), FIXED_365_DAYS));
     // const user1StHSK = await stHSK.balanceOf(addr1.address);
     // const user1HSK = await staking.getHSKForShares(user1StHSK);
     // console.log(`用户1（180天锁定）的HSK价值: ${ethers.formatEther(user1HSK)} HSK`);
@@ -102,3 +102,5 @@ describe("HashKeyChain Staking - Rewards", function () {
   //   // Don't do precise comparison, just ensure 90-day APR is higher than 30-day APR
   // });
 }); 
+// @HashKeyChainStakingBase.sol 我想下一个测试用例 模拟一下， 参考
+// @03_Rewards.test.js 

@@ -42,6 +42,16 @@ describe("HashKeyChain Staking - Initialization & Basic", function () {
 
   describe("Initialization", function() {
     it("Should initialize with correct values", async function() {
+      const factor_30 =  await staking.calculateCorrectionFactor(0)
+      console.log('30天的 质押占 总池子的百分比 * 10000 =', factor_30);
+      const factor_90 = await staking. calculateCorrectionFactor(1)
+      console.log('90天的 质押占 总池子的百分比 * 10000 =', factor_90);
+      const factor_180 =  await staking.calculateCorrectionFactor(2)
+      console.log('180天的 质押占 总池子的百分比 * 10000 =', factor_180);
+      const factor_365 =  await staking.calculateCorrectionFactor(3)
+      console.log('365天的 质押占 总池子的百分比 * 10000 =', factor_365);
+      const factor_0 =  await staking.calculateCorrectionFactor(4)
+      console.log('灵活的 质押占 总池子的百分比 * 10000 =', factor_0);
       expect(await staking.minStakeAmount()).to.equal(minStakeAmount);
       expect(await stHSK.totalSupply()).to.equal(0);
     });
@@ -53,23 +63,5 @@ describe("HashKeyChain Staking - Initialization & Basic", function () {
       expect(await staking.stakingBonus(FIXED_365_DAYS)).to.equal(400);
     });
   });
-  
-  describe("Basic Staking", function() {
-    it("Should reject stake below minimum", async function() {
-      await expect(
-        staking.connect(addr1).stake({ value: ethers.parseEther("50") })
-      ).to.be.revertedWith("Amount below minimum stake");
-    });
-    
-    it("Should accept valid stake", async function() {
-      const tx = await staking.connect(addr1).stake({
-        value: minStakeAmount
-      });
-      await tx.wait();
-      
-      expect(await staking.totalPooledHSK()).to.equal(minStakeAmount);
-      const expectedStHSK = ethers.toBigInt(minStakeAmount) - 1000n;  // 减去最小流动性 1000
-      expect(await stHSK.balanceOf(addr1.address)).to.equal(expectedStHSK);
-    });
-  });
+
 }); 

@@ -347,7 +347,7 @@ abstract contract HashKeyChainStakingOperations is HashKeyChainStakingBase {
         }
 
         // 计算当前HSK价值 - 复用getHSKForShares逻辑
-        uint256 currentHskValue = getHSKForShares(userStake.sharesAmount);
+        uint256 currentHskValue = getHSKForSharesByDuration(userStake.sharesAmount, userStake.lockDuration);
 
         // 原始质押金额
         originalAmount = userStake.hskAmount;

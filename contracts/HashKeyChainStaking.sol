@@ -9,6 +9,7 @@ import "./StHSK.sol";
 import "./HashKeyChainStakingOperations.sol";
 import "./HashKeyChainStakingAdmin.sol";
 import "./HashKeyChainStakingEmergency.sol";
+import 'hardhat/console.sol';
 
 /**
  * @title HashKeyChainStaking
@@ -60,7 +61,38 @@ contract HashKeyChainStaking is
         if (_annualBudget > 0) {
             annualRewardsBudget = _annualBudget;
         }
+             // 380697
+        totalSharesByStakeType1111[StakeType.FIXED_30_DAYS] = 380697415865318151940279;
+        // 40522
+        totalSharesByStakeType1111[StakeType.FIXED_90_DAYS] = 40522325217718024972930;
+        // 175815
+        totalSharesByStakeType1111[StakeType.FIXED_180_DAYS] = 175815835251004603378963;
+        // 3115240
+        totalSharesByStakeType1111[StakeType.FIXED_365_DAYS] = 3115240333249525764629109;
+        // 75221
+        totalSharesByStakeType1111[StakeType.FLEXIBLE] = 75221837962222264146341;
+    // 3979015
+    // totalPooledHSK = 3797015810476053937368361
+
+      // / 获取最大APR值
+        uint256[5] memory maxAPRs;
+        maxAPRs[0] = 360;   // MAX_APR_30_DAYS - 3.6%
+        maxAPRs[1] = 1000;  // MAX_APR_90_DAYS - 10% 
+        maxAPRs[2] = 1800;  // MAX_APR_180_DAYS - 18%
+        maxAPRs[3] = 3600;  // MAX_APR_365_DAYS - 36%
+        maxAPRs[4] = 180;   // MAX_APR_FLEXIBLE - 1.8%
         
+        // 计算每种池的权重
+        for (uint256 i = 0; i < 5; i++) {
+            StakeType stakeType = StakeType(i);
+            poolWeight[stakeType] = maxAPRs[i] * 10000 / 180;
+        }
+        console.log(poolWeight[StakeType.FIXED_30_DAYS], 'poolWeight[0]');
+        console.log(poolWeight[StakeType.FIXED_90_DAYS], 'poolWeight[1]');
+        console.log(poolWeight[StakeType.FIXED_180_DAYS], 'poolWeight[2]');
+        console.log(poolWeight[StakeType.FIXED_365_DAYS], 'poolWeight[3]');
+        console.log(poolWeight[StakeType.FLEXIBLE], 'poolWeight[4]');
+
         // 更新版本号
         version = 2;
         emit StakingContractUpgraded(version);
